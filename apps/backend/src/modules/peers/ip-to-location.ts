@@ -126,7 +126,7 @@ export function ipToLatLng(ip: string, network: string): LatLng {
 		if (geo?.ll) return [geo.ll[0], geo.ll[1]]
 	}
 	// deterministic fallback
-	const idx = createHash('md5').update(ip).digest()[0] & 63 // 0-63
+	const idx = createHash('sha256').update(ip).digest()[0] & 63 // 0-63
 	const {lat, lng} = fallbackCityRecords[idx]
 	return [Number(lat), Number(lng)]
 }

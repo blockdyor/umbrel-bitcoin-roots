@@ -208,6 +208,7 @@ function LiveGlobeWebGL({width = 650, height = 650}: {width?: number; height?: n
 		fetch('/datasets/ne_110m_admin_0_countries.geojson')
 			.then((res) => res.json())
 			.then(setCountries)
+			.catch((err) => console.error('Failed to load landmass dataset:', err))
 	}, [])
 
 	// Enable auto-rotation and disable zooming

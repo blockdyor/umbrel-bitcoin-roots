@@ -1,5 +1,6 @@
 import {spawn, ChildProcessWithoutNullStreams, execFileSync} from 'node:child_process'
 import {EventEmitter} from 'node:events'
+import {renameSync, rmSync, symlinkSync} from 'node:fs'
 import {Readable} from 'node:stream'
 import readline from 'node:readline'
 import fse from 'fs-extra'
@@ -97,7 +98,9 @@ type BitcoindManagerOptions = {
 export function parseBinaryVersionLine(firstLine: string): {implementation: string; version: string} {
 	const trimmed = firstLine.trim()
 	if (!trimmed) return {implementation: 'unknown', version: 'unknown'}
-	const implementation = trimmed.replace(/(?:daemon|RPC client)?\s*version.*$/i, '').trim() || 'unknown'
+	const versionIdx = trimmed.search(/\bversion\b/i)
+	const prefix = (versionIdx >= 0 ? trimmed.slice(0, versionIdx) : trimmed).trim()
+	const implementation = prefix.replace(/\s+(?:daemon|RPC client)$/i, '').trim() || 'unknown'
 	const version = (trimmed.match(/v\d+\.\d+(?:\.\d+)?(?:-[\w.-]+)?/) ?? ['unknown'])[0]
 	return {implementation, version}
 }
@@ -221,8 +224,11 @@ export class BitcoindManager {
 			return
 		}
 
-		// flip the single pointer used by both daemon and CLI
-		execFileSync('ln', ['-sfn', `${BITCOIN_CORE_VERSIONS_DIR}/${version}`, BITCOIN_CORE_CURRENT_SYMLINK])
+		// flip the single pointer used by both daemon and CLI atomically without spawning a shell binary
+		const tmpSymlink = `${BITCOIN_CORE_CURRENT_SYMLINK}.tmp-${process.pid}`
+		rmSync(tmpSymlink, {force: true})
+		symlinkSync(`${BITCOIN_CORE_VERSIONS_DIR}/${version}`, tmpSymlink)
+		renameSync(tmpSymlink, BITCOIN_CORE_CURRENT_SYMLINK)
 
 		const command = this.startCommand(ipcEnabled)
 
