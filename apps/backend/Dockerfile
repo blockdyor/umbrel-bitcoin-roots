@@ -127,9 +127,12 @@ WORKDIR /app
 # Note: import-map lives in package.json, so is also needed so Node can resolve "#settings/#types"
 COPY package*.json ./
 COPY apps/backend/package*.json apps/backend/
-# npm is only needed to install dependencies; remove it from the production image to reduce runtime attack surface.
+# npm is only needed to install dependencies; remove it and unused GeoIP tables from the production image.
 RUN npm ci --omit=dev --install-strategy=hoisted --ignore-scripts \
- && rm -rf /root/.npm /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+ && rm -rf /root/.npm /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
+    /app/node_modules/geoip-lite/data/geoip-city-names.dat \
+    /app/node_modules/geoip-lite/data/geoip-country.dat \
+    /app/node_modules/geoip-lite/data/geoip-country6.dat
 
 # Backend JS bundle
 COPY --from=app-builder /repo/apps/backend/dist ./dist
@@ -174,6 +177,7 @@ RUN mkdir -p /home/node \
  && chown -h 1000:1000 /home/node/.bitcoin
 
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=192"
 
 # Data dirs inside /data
 ENV BITCOIN_DIR=/data/bitcoin
