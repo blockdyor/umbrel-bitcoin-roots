@@ -4,6 +4,10 @@ import {test} from 'node:test'
 const {parseBinaryVersionLine} = await import('../dist/modules/bitcoind/manager.js')
 
 test('parseBinaryVersionLine parses Bitcoin Roots two-part version tags', () => {
+	assert.deepEqual(parseBinaryVersionLine('Bitcoin Roots daemon version v32.1-roots.2'), {
+		implementation: 'Bitcoin Roots',
+		version: 'v32.1-roots.2',
+	})
 	assert.deepEqual(parseBinaryVersionLine('Bitcoin Roots daemon version v30.3-roots.1'), {
 		implementation: 'Bitcoin Roots',
 		version: 'v30.3-roots.1',

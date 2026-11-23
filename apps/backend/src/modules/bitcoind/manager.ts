@@ -17,7 +17,7 @@ import {
 	BITCOIN_CORE_CURRENT_SYMLINK,
 } from '../../lib/paths.js'
 
-const IPC_MIN_BITCOIN_CORE_VERSION = 'v30.3-roots.1' satisfies (typeof AVAILABLE_BITCOIN_CORE_VERSIONS)[number]
+const IPC_MIN_BITCOIN_CORE_VERSION = 'v32.1-roots.2' satisfies (typeof AVAILABLE_BITCOIN_CORE_VERSIONS)[number]
 
 // Version helpers
 // TODO: determine whether these would be better as async/await (and therefor entire start() as well)
@@ -25,8 +25,10 @@ function getVersionFromSettings(): string {
 	try {
 		const json = fse.readJsonSync(SETTINGS_JSON)
 		if (typeof json.version === 'string' && json.version.length) {
-			// If the version is 'latest', use the default version which is the latest available version we've packaged
-			return json.version === 'latest' ? DEFAULT_BITCOIN_CORE_VERSION : json.version
+			if (json.version === 'latest') return DEFAULT_BITCOIN_CORE_VERSION
+			if ((AVAILABLE_BITCOIN_CORE_VERSIONS as readonly string[]).includes(json.version)) {
+				return json.version
+			}
 		}
 	} catch {}
 	return DEFAULT_BITCOIN_CORE_VERSION
