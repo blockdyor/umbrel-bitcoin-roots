@@ -59,6 +59,7 @@ jobs:
           file: apps/backend/Dockerfile
           push: true
           tags: ${{ env.IMAGE }}:${{ env.TAG }}-${{ matrix.slug }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha,scope=${{ runner.arch }}
   manifest:
     needs: build
